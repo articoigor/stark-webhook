@@ -1,10 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InvoiceRepository } from './invoice.repository';
 import { InvoiceDto } from './dtos/invoice.dto';
 import { IInvoiceService } from './interfaces/service.interface';
 import { CustomerDto } from './dtos/customer.dto';
 import { CustomerHelper as helper } from './helpers/customer.helper';
-import { Invoice, Project, Transfer, event } from 'starkbank';
+import { Invoice, Project, Transfer, event, invoice } from 'starkbank';
 
 @Injectable()
 export class InvoiceService implements IInvoiceService {
@@ -50,25 +54,30 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
   async processTransfer(body: any, headers: any): Promise<Transfer[]> {
     try {
       const starkKey = await this.invoiceRepository.retrievePublicKey();
-      console.log(starkKey);
-      if (headers['Digital-Signature'] !== starkKey)
+
+      const headersKey = this.formatHeaders(headers);
+
+      const isValidKey = this.validateHeaders(headersKey, starkKey);
+
+      if (!isValidKey)
         throw new UnauthorizedException(
           'Assinatura digital informada é inválida',
         );
 
-      const rawEvent: any = await event.parse({
-        content: JSON.stringify(body),
-        signature: headers['Digital-Signature'],
-      });
+      const rawEvent = body.event;
 
       if (
-        rawEvent.subscription === 'invoice' &&
-        rawEvent.log.type == 'credited'
-      ) {
-        const admin = new Project({
-          environment: 'sandbox',
-          id: '4884995034316800',
-          privateKey: `-----BEGIN EC PARAMETERS-----
+        rawEvent.subscription !== 'invoice' ||
+        rawEvent.log.type !== 'credited'
+      )
+        throw new BadRequestException(
+          'O evento recebido não atende ao status/subscrição correto',
+        );
+
+      const admin = new Project({
+        environment: 'sandbox',
+        id: '4884995034316800',
+        privateKey: `-----BEGIN EC PARAMETERS-----
 BgUrgQQACg==
 -----END EC PARAMETERS-----
 -----BEGIN EC PRIVATE KEY-----
@@ -76,13 +85,11 @@ MHQCAQEEIPnPOV646E95kegnLrGh2BJhVCk4pbl+1fBZhpsEFZN+oAcGBSuBBAAK
 oUQDQgAECim3XK8W5wRJNgxUQg/7jMnX+6YdsTU2uvtq7SyznO4fhpZo4YRwwajT
 D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
 -----END EC PRIVATE KEY-----`,
-        });
+      });
 
-        return this.invoiceRepository.transferAmount(
-          rawEvent.log.invoice?.nominalAmount,
-          admin,
-        );
-      }
+      const log: invoice.Log | any = rawEvent.log;
+
+      return this.invoiceRepository.transferAmount(log.invoice.amount, admin);
     } catch (e) {
       throw new Error(e);
     }
@@ -102,6 +109,13 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
       2,
       customer.taxId,
     );
+  }
+
+  private validateHeaders(headersKey: string, pbKey: string) {
+    return pbKey.trim() == headersKey.trim();
+  }
+  private formatHeaders(headers: any): string {
+    return headers['digital-signature'].replace(/\\\\n/g, '\n');
   }
 
   private generateInvoiceValue(): number {

@@ -7,7 +7,7 @@ import { Invoice, Transfer } from 'starkbank';
 export class InvoiceController {
   constructor(private readonly invoiceService: InvoiceService) {}
 
-  @Cron('*/15 * * * *')
+  @Cron('0 */3 * * *')
   generateInvoices(): Promise<Invoice[]> {
     return this.invoiceService.generateInvoices();
   }
