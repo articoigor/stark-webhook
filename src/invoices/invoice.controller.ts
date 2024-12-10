@@ -12,7 +12,7 @@ export class InvoiceController {
     return this.invoiceService.generateInvoices();
   }
 
-  @Post('/invoices/process')
+  @Post()
   processTransfer(
     @Body() body: any,
     @Headers() headers: any,
