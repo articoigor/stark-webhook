@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InvoiceRepository } from './invoice.repository';
@@ -8,13 +9,19 @@ import { InvoiceDto } from './dtos/invoice.dto';
 import { IInvoiceService } from './interfaces/service.interface';
 import { CustomerDto } from './dtos/customer.dto';
 import { CustomerHelper as helper } from './helpers/customer.helper';
-import { Invoice, Project, Transfer, event, invoice } from 'starkbank';
+import { Invoice, Project, Transfer, invoice } from 'starkbank';
 
 @Injectable()
 export class InvoiceService implements IInvoiceService {
   constructor(private readonly invoiceRepository: InvoiceRepository) {}
 
+  private readonly logger = new Logger(InvoiceService.name);
+
   async generateInvoices(): Promise<Invoice[]> {
+    this.logger.log(
+      'InvoiceService (generateInvoices): STARTED GENERATING MOCK INVOICES',
+    );
+
     try {
       let count = Math.floor(Math.random() * (12 - 8) + 8);
 
@@ -38,13 +45,26 @@ export class InvoiceService implements IInvoiceService {
         privateKey: process.env.AUTH_PRIV_KEY,
       });
 
-      return this.invoiceRepository.publishInvoices(invoices, admin);
+      const res = await this.invoiceRepository.publishInvoices(invoices, admin);
+
+      this.logger.log(
+        'InvoiceService (generateInvoices): GENERATED MOCKS SUCESSFULLY',
+      );
+
+      return res;
     } catch (e) {
+      this.logger.log(
+        'InvoiceService ERR (generateInvoices): PROBLEM WHILE GENERATING MOCK INVOICES',
+      );
       throw new Error(e);
     }
   }
 
   async processTransfer(body: any, headers: any): Promise<Transfer[]> {
+    this.logger.log(
+      'InvoiceService (processTransfer): STARTED PROCESSING EVENT',
+    );
+
     try {
       const starkKey = await this.invoiceRepository.retrievePublicKey();
 
@@ -75,8 +95,20 @@ export class InvoiceService implements IInvoiceService {
 
       const log: invoice.Log | any = rawEvent.log;
 
-      return this.invoiceRepository.transferAmount(log.invoice.amount, admin);
+      const res = await this.invoiceRepository.transferAmount(
+        log.invoice.amount,
+        admin,
+      );
+
+      this.logger.log(
+        'InvoiceService (processTransfer): PROCESSED TRANSFER EVENT SUCCESSFULLY',
+      );
+
+      return res;
     } catch (e) {
+      this.logger.log(
+        'InvoiceService ERR (processTransfer): PROBLEM WHILE PROCESSING AMOUNT TRANSFER',
+      );
       throw new Error(e);
     }
   }
