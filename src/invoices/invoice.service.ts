@@ -31,20 +31,13 @@ export class InvoiceService implements IInvoiceService {
 
         invoices.push(invoice);
       }
-      console.log(invoices);
+
       const admin = new Project({
         environment: 'sandbox',
         id: '4884995034316800',
-        privateKey: `-----BEGIN EC PARAMETERS-----
-BgUrgQQACg==
------END EC PARAMETERS-----
------BEGIN EC PRIVATE KEY-----
-MHQCAQEEIPnPOV646E95kegnLrGh2BJhVCk4pbl+1fBZhpsEFZN+oAcGBSuBBAAK
-oUQDQgAECim3XK8W5wRJNgxUQg/7jMnX+6YdsTU2uvtq7SyznO4fhpZo4YRwwajT
-D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
------END EC PRIVATE KEY-----`,
+        privateKey: process.env.AUTH_PRIV_KEY,
       });
-      console.log(admin);
+
       return this.invoiceRepository.publishInvoices(invoices, admin);
     } catch (e) {
       throw new Error(e);
@@ -77,14 +70,7 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
       const admin = new Project({
         environment: 'sandbox',
         id: '4884995034316800',
-        privateKey: `-----BEGIN EC PARAMETERS-----
-BgUrgQQACg==
------END EC PARAMETERS-----
------BEGIN EC PRIVATE KEY-----
-MHQCAQEEIPnPOV646E95kegnLrGh2BJhVCk4pbl+1fBZhpsEFZN+oAcGBSuBBAAK
-oUQDQgAECim3XK8W5wRJNgxUQg/7jMnX+6YdsTU2uvtq7SyznO4fhpZo4YRwwajT
-D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
------END EC PRIVATE KEY-----`,
+        privateKey: process.env.AUTH_PRIV_KEY,
       });
 
       const log: invoice.Log | any = rawEvent.log;
