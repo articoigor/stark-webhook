@@ -127,6 +127,7 @@ describe('InvoiceService', () => {
     });
 
     it('should throw BadRequestException for invalid event type', async () => {
+      console.log(process.env);
       repository.retrievePublicKey.mockResolvedValue('valid-public-key');
 
       const body = {
