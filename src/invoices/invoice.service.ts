@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -39,10 +40,12 @@ export class InvoiceService implements IInvoiceService {
         invoices.push(invoice);
       }
 
+      const privKey = await this.invoiceRepository.retrievePrivateKey();
+
       const admin = new Project({
         environment: 'sandbox',
         id: '4884995034316800',
-        privateKey: process.env.AUTH_PRIV_KEY,
+        privateKey: privKey,
       });
 
       const res = await this.invoiceRepository.publishInvoices(invoices, admin);
@@ -56,7 +59,16 @@ export class InvoiceService implements IInvoiceService {
       this.logger.log(
         'InvoiceService ERR (generateInvoices): PROBLEM WHILE GENERATING MOCK INVOICES',
       );
-      throw new Error(e);
+
+      const error = e.toString();
+
+      if (error.includes('Repository')) {
+        const message = error.split(':')[1].trim();
+
+        throw new InternalServerErrorException(message);
+      }
+
+      throw e;
     }
   }
 
@@ -87,10 +99,12 @@ export class InvoiceService implements IInvoiceService {
           'O evento recebido não atende ao status/subscrição correto',
         );
 
+      const privKey = await this.invoiceRepository.retrievePrivateKey();
+
       const admin = new Project({
         environment: 'sandbox',
         id: '4884995034316800',
-        privateKey: process.env.AUTH_PRIV_KEY,
+        privateKey: privKey,
       });
 
       const log: invoice.Log | any = rawEvent.log;
@@ -99,7 +113,7 @@ export class InvoiceService implements IInvoiceService {
         log.invoice.amount,
         admin,
       );
-
+      console.log(res);
       this.logger.log(
         'InvoiceService (processTransfer): PROCESSED TRANSFER EVENT SUCCESSFULLY',
       );
@@ -109,7 +123,16 @@ export class InvoiceService implements IInvoiceService {
       this.logger.log(
         'InvoiceService ERR (processTransfer): PROBLEM WHILE PROCESSING AMOUNT TRANSFER',
       );
-      throw new Error(e);
+
+      const error = e.toString();
+
+      if (error.includes('Repository')) {
+        const message = error.split(':')[1].trim();
+
+        throw new InternalServerErrorException(message);
+      }
+
+      throw e;
     }
   }
 

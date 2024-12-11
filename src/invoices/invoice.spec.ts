@@ -1,22 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InvoiceService } from './invoice.service';
 import { InvoiceRepository } from './invoice.repository';
-import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { InvoiceDto } from './dtos/invoice.dto';
-import { Project, invoice } from 'starkbank';
+import { Invoice, Project } from 'starkbank';
 import { HttpService } from '@nestjs/axios';
-import { of } from 'rxjs';
 
 describe('InvoiceService', () => {
   let service: InvoiceService;
   let repository: jest.Mocked<InvoiceRepository>;
-  let httpService: jest.Mocked<HttpService>;
 
   beforeEach(async () => {
-    const mockHttpService = {
-      get: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InvoiceService,
@@ -26,36 +19,36 @@ describe('InvoiceService', () => {
             publishInvoices: jest.fn(),
             retrievePublicKey: jest.fn(),
             transferAmount: jest.fn(),
+            retrievePrivateKey: jest.fn()
+              .mockReturnValue(`-----BEGIN EC PARAMETERS-----
+BgUrgQQACg==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MHQCAQEEIPnPOV646E95kegnLrGh2BJhVCk4pbl+1fBZhpsEFZN+oAcGBSuBBAAK
+oUQDQgAECim3XK8W5wRJNgxUQg/7jMnX+6YdsTU2uvtq7SyznO4fhpZo4YRwwajT
+D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
+-----END EC PRIVATE KEY-----
+`),
           },
-        },
-        {
-          provide: HttpService,
-          useValue: mockHttpService,
         },
       ],
     }).compile();
 
     service = module.get<InvoiceService>(InvoiceService);
     repository = module.get(InvoiceRepository);
-    httpService = module.get(HttpService);
   });
 
   describe('generateInvoices', () => {
     it('should generate and publish invoices', async () => {
-      const mockInvoices: InvoiceDto[] = [
-        new InvoiceDto(
-          10000,
-          'John Doe',
-          '2024-12-10T00:00:00.000+00:00',
-          2,
-          '12345678901',
-        ),
+      const mockInvoices: Invoice[] = [
+        new Invoice({
+          amount: 10000,
+          taxId: '09.435.60-78',
+          name: 'John Doe',
+        }),
       ];
-      const mockPublishedInvoices = [];
 
-      repository.publishInvoices.mockResolvedValue(
-        mockPublishedInvoices as any,
-      );
+      repository.publishInvoices.mockResolvedValue(mockInvoices as any);
 
       const result = await service.generateInvoices();
 
@@ -63,7 +56,7 @@ describe('InvoiceService', () => {
         expect.any(Array),
         expect.any(Project),
       );
-      expect(result).toEqual(mockPublishedInvoices);
+      expect(result).toEqual(mockInvoices);
     });
 
     it('should throw an error if publishing invoices fails', async () => {
@@ -122,13 +115,11 @@ describe('InvoiceService', () => {
       };
 
       await expect(service.processTransfer(body, headers)).rejects.toThrow(
-        'UnauthorizedException: Assinatura digital informada é inválida',
+        'Assinatura digital informada é inválida',
       );
     });
 
     it('should throw BadRequestException for invalid event type', async () => {
-      console.log('************************************');
-      console.log(process.env.AUTH_PRIV_KEY);
       repository.retrievePublicKey.mockResolvedValue('valid-public-key');
 
       const body = {
@@ -144,7 +135,7 @@ describe('InvoiceService', () => {
       };
 
       await expect(service.processTransfer(body, headers)).rejects.toThrow(
-        'BadRequestException: O evento recebido não atende ao status/subscrição correto',
+        'O evento recebido não atende ao status/subscrição correto',
       );
     });
   });
