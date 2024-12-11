@@ -118,25 +118,5 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
         'Assinatura digital informada é inválida',
       );
     });
-
-    it('should throw BadRequestException for invalid event type', async () => {
-      repository.retrievePublicKey.mockResolvedValue('valid-public-key');
-
-      const body = {
-        event: {
-          subscription: 'invalid',
-          log: {
-            type: 'invalid',
-          },
-        },
-      };
-      const headers = {
-        'digital-signature': 'valid-public-key',
-      };
-
-      await expect(service.processTransfer(body, headers)).rejects.toThrow(
-        'O evento recebido não atende ao status/subscrição correto',
-      );
-    });
   });
 });

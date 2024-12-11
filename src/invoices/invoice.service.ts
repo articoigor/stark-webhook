@@ -92,33 +92,30 @@ export class InvoiceService implements IInvoiceService {
       const rawEvent = body.event;
 
       if (
-        rawEvent.subscription !== 'invoice' ||
-        rawEvent.log.type !== 'credited'
-      )
-        throw new BadRequestException(
-          'O evento recebido não atende ao status/subscrição correto',
+        rawEvent.subscription == 'invoice' ||
+        rawEvent.log.type == 'credited'
+      ) {
+        const privKey = await this.invoiceRepository.retrievePrivateKey();
+
+        const admin = new Project({
+          environment: 'sandbox',
+          id: '4884995034316800',
+          privateKey: privKey,
+        });
+
+        const log: invoice.Log | any = rawEvent.log;
+
+        const res = await this.invoiceRepository.transferAmount(
+          log.invoice.amount,
+          admin,
         );
 
-      const privKey = await this.invoiceRepository.retrievePrivateKey();
+        this.logger.log(
+          'InvoiceService (processTransfer): PROCESSED TRANSFER EVENT SUCCESSFULLY',
+        );
 
-      const admin = new Project({
-        environment: 'sandbox',
-        id: '4884995034316800',
-        privateKey: privKey,
-      });
-
-      const log: invoice.Log | any = rawEvent.log;
-
-      const res = await this.invoiceRepository.transferAmount(
-        log.invoice.amount,
-        admin,
-      );
-      console.log(res);
-      this.logger.log(
-        'InvoiceService (processTransfer): PROCESSED TRANSFER EVENT SUCCESSFULLY',
-      );
-
-      return res;
+        return res;
+      }
     } catch (e) {
       this.logger.log(
         'InvoiceService ERR (processTransfer): PROBLEM WHILE PROCESSING AMOUNT TRANSFER',
