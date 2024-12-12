@@ -35,7 +35,7 @@ describe('InvoiceService', () => {
       jest.resetModules();
       process.env = {
         ...originalEnv,
-        NODE_ENV: `-----BEGIN EC PARAMETERS-----
+        PRIV_KEY_VAL: `-----BEGIN EC PARAMETERS-----
 BgUrgQQACg==
 -----END EC PARAMETERS-----
 -----BEGIN EC PRIVATE KEY-----
@@ -85,7 +85,7 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
       jest.resetModules();
       process.env = {
         ...originalEnv,
-        NODE_ENV: `-----BEGIN EC PARAMETERS-----
+        PRIV_KEY_VAL: `-----BEGIN EC PARAMETERS-----
 BgUrgQQACg==
 -----END EC PARAMETERS-----
 -----BEGIN EC PRIVATE KEY-----
