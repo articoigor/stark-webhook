@@ -14,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/processInvoice/invoice.router.js"
+  "scriptFile": "../dist/processInvoice/processInvoice.router.js"
 }
