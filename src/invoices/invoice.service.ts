@@ -40,7 +40,7 @@ export class InvoiceService implements IInvoiceService {
         invoices.push(invoice);
       }
 
-      const privKey = await this.invoiceRepository.retrievePrivateKey();
+      const privKey = process.env.PRIV_KEY_VAL;
 
       const admin = new Project({
         environment: 'sandbox',
@@ -95,7 +95,7 @@ export class InvoiceService implements IInvoiceService {
         rawEvent.subscription == 'invoice' ||
         rawEvent.log.type == 'credited'
       ) {
-        const privKey = await this.invoiceRepository.retrievePrivateKey();
+        const privKey = process.env.PRIV_KEY_VAL;
 
         const admin = new Project({
           environment: 'sandbox',

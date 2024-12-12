@@ -7,5 +7,4 @@ export interface IInvoiceRepository {
     adminUser: Project,
   ): Promise<Invoice[]>;
   retrievePublicKey(): Promise<string>;
-  retrievePrivateKey(): Promise<string>;
 }

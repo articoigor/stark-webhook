@@ -1,16 +1,9 @@
-import {
-  BadRequestException,
-  HttpException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InvoiceDto } from './dtos/invoice.dto';
 import { IInvoiceRepository } from './interfaces/repository.interface';
 import { invoice, Invoice, Project, Transfer, transfer } from 'starkbank';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { SecretClient } from '@azure/keyvault-secrets';
-import { DefaultAzureCredential } from '@azure/identity';
 import { RepositoryException } from './dtos/repository.exception';
 
 @Injectable()
@@ -59,25 +52,6 @@ export class InvoiceRepository implements IInvoiceRepository {
     } catch (e) {
       throw new RepositoryException(
         'Houve um erro ao tentar transferir os fundos',
-        e,
-      );
-    }
-  }
-
-  async retrievePrivateKey(): Promise<string> {
-    try {
-      const credential = new DefaultAzureCredential();
-
-      const url = 'https://stark-secret-storage.vault.azure.net';
-
-      const client = new SecretClient(url, credential);
-
-      const vault = await client.getSecret(process.env.SECRET_NAME);
-
-      return vault.value;
-    } catch (e) {
-      throw new RepositoryException(
-        'Houve um erro ao tentar recuperar a chave privada',
         e,
       );
     }
