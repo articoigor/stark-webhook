@@ -1,9 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InvoiceService } from './invoice.service';
 import { InvoiceRepository } from './invoice.repository';
-import { InvoiceDto } from './dtos/invoice.dto';
 import { Invoice, Project } from 'starkbank';
-import { HttpService } from '@nestjs/axios';
+import { HttpException } from '@nestjs/common';
 
 describe('InvoiceService', () => {
   let service: InvoiceService;
@@ -68,13 +67,16 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
         expect.any(Array),
         expect.any(Project),
       );
-      expect(result).toEqual(mockInvoices);
+      expect(result).toEqual({ error: null, invoices: mockInvoices });
     });
 
     it('should throw an error if publishing invoices fails', async () => {
       repository.publishInvoices.mockRejectedValue(new Error('Publish error'));
 
-      await expect(service.generateInvoices()).rejects.toThrow('Publish error');
+      expect(service.generateInvoices()).resolves.toEqual({
+        error: new HttpException('Publish error', 400),
+        invoices: null,
+      });
     });
   });
 
@@ -127,7 +129,7 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
         50000,
         expect.any(Project),
       );
-      expect(result).toEqual([{ id: 'transfer1' }]);
+      expect(result).toEqual({ error: null, transfer: { id: 'transfer1' } });
     });
 
     it('should throw UnauthorizedException if the signature is invalid', async () => {
@@ -148,9 +150,13 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
         'digital-signature': 'valid-public-key',
       };
 
-      await expect(service.processTransfer(body, headers)).rejects.toThrow(
-        'Assinatura digital informada é inválida',
-      );
+      expect(service.processTransfer(body, headers)).resolves.toEqual({
+        error: new HttpException(
+          'Assinatura digital informada é inválida',
+          400,
+        ),
+        transfer: null,
+      });
     });
   });
 });
