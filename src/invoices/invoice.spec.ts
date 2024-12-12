@@ -19,16 +19,6 @@ describe('InvoiceService', () => {
             publishInvoices: jest.fn(),
             retrievePublicKey: jest.fn(),
             transferAmount: jest.fn(),
-            retrievePrivateKey: jest.fn()
-              .mockReturnValue(`-----BEGIN EC PARAMETERS-----
-BgUrgQQACg==
------END EC PARAMETERS-----
------BEGIN EC PRIVATE KEY-----
-MHQCAQEEIPnPOV646E95kegnLrGh2BJhVCk4pbl+1fBZhpsEFZN+oAcGBSuBBAAK
-oUQDQgAECim3XK8W5wRJNgxUQg/7jMnX+6YdsTU2uvtq7SyznO4fhpZo4YRwwajT
-D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
------END EC PRIVATE KEY-----
-`),
           },
         },
       ],
@@ -39,6 +29,28 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
   });
 
   describe('generateInvoices', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.resetModules();
+      process.env = {
+        ...originalEnv,
+        NODE_ENV: `-----BEGIN EC PARAMETERS-----
+BgUrgQQACg==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MHQCAQEEIPnPOV646E95kegnLrGh2BJhVCk4pbl+1fBZhpsEFZN+oAcGBSuBBAAK
+oUQDQgAECim3XK8W5wRJNgxUQg/7jMnX+6YdsTU2uvtq7SyznO4fhpZo4YRwwajT
+D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
+-----END EC PRIVATE KEY-----
+`,
+      };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
     it('should generate and publish invoices', async () => {
       const mockInvoices: Invoice[] = [
         new Invoice({
@@ -67,6 +79,28 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
   });
 
   describe('processTransfer', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      jest.resetModules();
+      process.env = {
+        ...originalEnv,
+        NODE_ENV: `-----BEGIN EC PARAMETERS-----
+BgUrgQQACg==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MHQCAQEEIPnPOV646E95kegnLrGh2BJhVCk4pbl+1fBZhpsEFZN+oAcGBSuBBAAK
+oUQDQgAECim3XK8W5wRJNgxUQg/7jMnX+6YdsTU2uvtq7SyznO4fhpZo4YRwwajT
+D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
+-----END EC PRIVATE KEY-----
+`,
+      };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
     it('should process a valid transfer', async () => {
       repository.retrievePublicKey.mockResolvedValue('valid-public-key');
       repository.transferAmount.mockResolvedValue([{ id: 'transfer1' }] as any);
