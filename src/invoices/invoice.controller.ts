@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Headers, HttpCode } from '@nestjs/common';
+import { Body, Controller, Post, Headers } from '@nestjs/common';
 import { InvoiceService } from './invoice.service';
 import { Cron } from '@nestjs/schedule';
 import { Invoice, Transfer } from 'starkbank';
@@ -7,12 +7,7 @@ import { Invoice, Transfer } from 'starkbank';
 export class InvoiceController {
   constructor(private readonly invoiceService: InvoiceService) {}
 
-  @Cron('0 */3 * * *')
-  generateInvoices(): Promise<Invoice[]> {
-    return this.invoiceService.generateInvoices();
-  }
-
-  @Post('/invoices/process')
+  @Post('/invoice/process')
   processTransfer(
     @Body() body: any,
     @Headers() headers: any,

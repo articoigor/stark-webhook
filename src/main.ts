@@ -5,10 +5,6 @@ import { ConfigModule } from '@nestjs/config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   ConfigModule.forRoot();
-  app.enableCors({
-    origin: '*',
-    methods: 'GET,POST',
-  });
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

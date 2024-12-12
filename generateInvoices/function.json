@@ -1,0 +1,22 @@
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "route": "tasks/run"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+      "type": "timerTrigger",
+      "direction": "in",
+      "name": "timeTrigger",
+      "schedule": "* * * * *"
+    }
+  ]
+}
