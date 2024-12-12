@@ -5,7 +5,8 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "route": "invoice/process"
+      "route": "healthcheck",
+      "methods": ["get"]
     },
     {
       "type": "http",
@@ -13,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/processInvoice/index.js"
+  "scriptFile": "../dist/serviceHealthcheck/healthcheck.router.js"
 }

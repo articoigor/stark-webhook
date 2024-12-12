@@ -1,6 +1,8 @@
-import { Invoice } from 'starkbank';
-import { InvoiceDto } from '../dtos/invoice.dto';
+import { ProcessTransferResponse } from './processInvoice.response';
+import { GenerateInvoiceResponse } from './generateInvoices.response';
 
 export interface IInvoiceService {
-  generateInvoices(invoices: InvoiceDto[]): Promise<Invoice[]>;
+  generateInvoices(): Promise<GenerateInvoiceResponse>;
+  processTransfer(body: any, headers: any): Promise<ProcessTransferResponse>;
+  functionsHealthcheck(): string;
 }

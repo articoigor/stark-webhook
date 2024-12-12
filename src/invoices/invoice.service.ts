@@ -1,16 +1,17 @@
 import {
-  BadRequestException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   Logger,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InvoiceRepository } from './invoice.repository';
 import { InvoiceDto } from './dtos/invoice.dto';
 import { IInvoiceService } from './interfaces/service.interface';
 import { CustomerDto } from './dtos/customer.dto';
 import { CustomerHelper as helper } from './helpers/customer.helper';
-import { Invoice, Project, Transfer, invoice } from 'starkbank';
+import { Project, invoice } from 'starkbank';
+import { ProcessTransferResponse } from './interfaces/processInvoice.response';
+import { GenerateInvoiceResponse } from './interfaces/generateInvoices.response';
 
 @Injectable()
 export class InvoiceService implements IInvoiceService {
@@ -18,7 +19,14 @@ export class InvoiceService implements IInvoiceService {
 
   private readonly logger = new Logger(InvoiceService.name);
 
-  async generateInvoices(): Promise<Invoice[]> {
+  functionsHealthcheck(): any {
+    return {
+      status: 200,
+      message: 'The azure functions are healthy',
+    };
+  }
+
+  async generateInvoices(): Promise<GenerateInvoiceResponse> {
     this.logger.log(
       'InvoiceService (generateInvoices): STARTED GENERATING MOCK INVOICES',
     );
@@ -54,25 +62,23 @@ export class InvoiceService implements IInvoiceService {
         'InvoiceService (generateInvoices): GENERATED MOCKS SUCESSFULLY',
       );
 
-      return res;
+      return new GenerateInvoiceResponse(res, null);
     } catch (e) {
       this.logger.log(
         'InvoiceService ERR (generateInvoices): PROBLEM WHILE GENERATING MOCK INVOICES',
       );
 
-      const error = e.toString();
-
-      if (error.includes('Repository')) {
-        const message = error.split(':')[1].trim();
-
-        throw new InternalServerErrorException(message);
-      }
-
-      throw e;
+      return new GenerateInvoiceResponse(
+        null,
+        new HttpException(e.message, 500),
+      );
     }
   }
 
-  async processTransfer(body: any, headers: any): Promise<Transfer[]> {
+  async processTransfer(
+    body: any,
+    headers: any,
+  ): Promise<ProcessTransferResponse> {
     this.logger.log(
       'InvoiceService (processTransfer): STARTED PROCESSING EVENT',
     );
@@ -84,9 +90,19 @@ export class InvoiceService implements IInvoiceService {
 
       const isValidKey = this.validateHeaders(headersKey, starkKey);
 
-      if (!isValidKey)
-        throw new UnauthorizedException(
-          'Assinatura digital informada é inválida',
+      if (!headersKey || !isValidKey)
+        return new ProcessTransferResponse(
+          null,
+          new HttpException('Assinatura digital informada é inválida', 400),
+        );
+
+      if (!body || !body.event)
+        return new ProcessTransferResponse(
+          null,
+          new HttpException(
+            'O preenchimento do body com os dados do invoice event é obrigatório',
+            400,
+          ),
         );
 
       const rawEvent = body.event;
@@ -114,22 +130,13 @@ export class InvoiceService implements IInvoiceService {
           'InvoiceService (processTransfer): PROCESSED TRANSFER EVENT SUCCESSFULLY',
         );
 
-        return res;
+        return new ProcessTransferResponse(res[0], null);
       }
     } catch (e) {
-      this.logger.log(
-        'InvoiceService ERR (processTransfer): PROBLEM WHILE PROCESSING AMOUNT TRANSFER',
+      return new ProcessTransferResponse(
+        null,
+        new HttpException(e.message, 500),
       );
-
-      const error = e.toString();
-
-      if (error.includes('Repository')) {
-        const message = error.split(':')[1].trim();
-
-        throw new InternalServerErrorException(message);
-      }
-
-      throw e;
     }
   }
 
@@ -153,7 +160,9 @@ export class InvoiceService implements IInvoiceService {
     return pbKey.trim() == headersKey.trim();
   }
   private formatHeaders(headers: any): string {
-    return headers['digital-signature'].replace(/\\\\n/g, '\n');
+    const headerFlag = headers['digital-signature'];
+
+    return headerFlag ? headerFlag.replace(/\\\\n/g, '\n') : '';
   }
 
   private generateInvoiceValue(): number {

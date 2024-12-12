@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    {
+      "name": "generateInvoices",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 * * * * *",
+      "runOnStartup": false
+    }
+  ]
+}
