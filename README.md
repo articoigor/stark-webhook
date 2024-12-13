@@ -22,15 +22,23 @@ Este projeto é uma aplicação backend e também parte do processo seletivo par
    - Node.js instalado.
    - Azure Functions Core Tools instalado.
    - Azure CLI (opcional, para deploy).
+   - Azurite (Simulador de armazenamento).
    - Criação do arquivo .env na raiz do diretório **src** (Para saber o conteúdo, solicitar através do email)
 
-2. **Instalar Dependências**:
+2. **Instalar e executar a Azurite**
+   Em um diretório à parte, basta executar os seguintes comandos:
+
+   ```bash
+   npm install azurite && azurite
+   ```
+
+3. **Instalar Dependências**:
 
    ```bash
    npm install
    ```
 
-3. **Executar o comando de start**
+4. **Executar o comando de start**
 
    ```bash
    npm run start

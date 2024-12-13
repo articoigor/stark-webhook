@@ -4,7 +4,7 @@ import { IInvoiceRepository } from './interfaces/repository.interface';
 import { invoice, Invoice, Project, Transfer, transfer } from 'starkbank';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { RepositoryException } from './dtos/repository.exception';
+import { RepositoryException } from './interfaces/repository.exception';
 
 @Injectable()
 export class InvoiceRepository implements IInvoiceRepository {

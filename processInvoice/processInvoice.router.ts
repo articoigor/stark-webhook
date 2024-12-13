@@ -1,5 +1,4 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions';
-import { HttpException, Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from 'src/app.module';
 import { InvoiceService } from 'src/invoices/invoice.service';
