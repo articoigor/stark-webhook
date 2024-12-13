@@ -1,12 +1,10 @@
 {
   "bindings": [
     {
-      "authLevel": "anonymous",
       "type": "httpTrigger",
       "direction": "in",
-      "name": "req",
-      "route": "invoice/process",
-      "methods": ["post"]
+      "webHookType": "genericJson",
+      "name": "req"
     },
     {
       "type": "http",

@@ -30,9 +30,7 @@ export class InvoiceService implements IInvoiceService {
     );
 
     try {
-      // let count = Math.floor(Math.random() * (12 - 8) + 8);
-
-      let count = 10;
+      let count = Math.floor(Math.random() * (12 - 8) + 8);
 
       const invoices: InvoiceDto[] = [];
 
