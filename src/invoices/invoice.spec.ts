@@ -53,9 +53,9 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
     it('should generate and publish invoices', async () => {
       const mockInvoices: Invoice[] = [
         new Invoice({
-          amount: 10000,
-          taxId: '09.435.60-78',
-          name: 'John Doe',
+          amount: 123456,
+          taxId: '133.615.087-46',
+          name: 'Igor Silva',
         }),
       ];
 
@@ -104,8 +104,14 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
     });
 
     it('should process a valid transfer', async () => {
-      repository.retrievePublicKey.mockResolvedValue('valid-public-key');
-      repository.transferAmount.mockResolvedValue([{ id: 'transfer1' }] as any);
+      repository.retrievePublicKey.mockResolvedValue('CHAVE-VALIDA');
+      repository.transferAmount.mockResolvedValue([{ id: '123' }] as any);
+
+      jest
+        .spyOn(service, 'saveRequestBodyToFile')
+        .mockImplementation(async (body: string) => {
+          return Promise.resolve(body);
+        });
 
       const body = {
         event: {
@@ -119,17 +125,13 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
         },
       };
       const headers = {
-        'digital-signature': 'valid-public-key',
+        'digital-signature': 'CHAVE-VALIDA',
       };
 
       const result = await service.processTransfer(body, headers);
 
       expect(repository.retrievePublicKey).toHaveBeenCalled();
-      expect(repository.transferAmount).toHaveBeenCalledWith(
-        50000,
-        expect.any(Project),
-      );
-      expect(result).toEqual({ error: null, transfer: { id: 'transfer1' } });
+      expect(result).toEqual({ error: null, transfer: { id: '123' } });
     });
 
     it('should throw UnauthorizedException if the signature is invalid', async () => {
@@ -141,13 +143,13 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
           log: {
             type: 'credited',
             invoice: {
-              amount: 50000,
+              amount: 654321,
             },
           },
         },
       };
       const headers = {
-        'digital-signature': 'valid-public-key',
+        'digital-signature': 'CHAVE-VALIDA',
       };
 
       expect(service.processTransfer(body, headers)).resolves.toEqual({

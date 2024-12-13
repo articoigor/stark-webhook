@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { InvoiceRepository } from './invoice.repository';
 import { InvoiceDto } from './dtos/invoice.dto';
 import { IInvoiceService } from './interfaces/service.interface';
@@ -12,10 +7,13 @@ import { CustomerHelper as helper } from './helpers/customer.helper';
 import { Project, invoice } from 'starkbank';
 import { ProcessTransferResponse } from './interfaces/processInvoice.response';
 import { GenerateInvoiceResponse } from './interfaces/generateInvoices.response';
+import { BlobServiceClient, BlockBlobClient } from '@azure/storage-blob';
 
 @Injectable()
 export class InvoiceService implements IInvoiceService {
   constructor(private readonly invoiceRepository: InvoiceRepository) {}
+
+  private readonly containerClient = this.generateContainerClient();
 
   private readonly logger = new Logger(InvoiceService.name);
 
@@ -32,7 +30,9 @@ export class InvoiceService implements IInvoiceService {
     );
 
     try {
-      let count = Math.floor(Math.random() * (12 - 8) + 8);
+      // let count = Math.floor(Math.random() * (12 - 8) + 8);
+
+      let count = 10;
 
       const invoices: InvoiceDto[] = [];
 
@@ -82,6 +82,8 @@ export class InvoiceService implements IInvoiceService {
     this.logger.log(
       'InvoiceService (processTransfer): STARTED PROCESSING EVENT',
     );
+
+    await this.saveRequestBodyToFile(body);
 
     try {
       const starkKey = await this.invoiceRepository.retrievePublicKey();
@@ -138,6 +140,29 @@ export class InvoiceService implements IInvoiceService {
         new HttpException(e.message, 500),
       );
     }
+  }
+
+  private generateContainerClient() {
+    const blobServiceClient = BlobServiceClient.fromConnectionString(
+      'DefaultEndpointsProtocol=https;AccountName=starkevents;AccountKey=0aMF7Du1Thfo33Zxk3JQSJg9jwvZsUeEWHaHcSNpXB0qvAaeN/9DdXm80flTBx7mJ3JjFKTcSJcn+ASt3C6igg==;EndpointSuffix=core.windows.net',
+    );
+
+    return blobServiceClient.getContainerClient('invoice-logs');
+  }
+
+  async saveRequestBodyToFile(requestBody: string) {
+    const today = new Date();
+
+    const fileName = `log-invoice_process-${today.getMilliseconds()}.txt`;
+
+    const blockBlobClient: BlockBlobClient =
+      this.containerClient.getBlockBlobClient(fileName);
+
+    const uploadBlobResponse = await blockBlobClient.uploadData(
+      Buffer.from(JSON.stringify(requestBody), 'utf-8'),
+    );
+
+    return uploadBlobResponse.requestId;
   }
 
   private createInvoice(customer: CustomerDto): InvoiceDto {
