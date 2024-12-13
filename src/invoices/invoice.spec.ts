@@ -3,6 +3,9 @@ import { InvoiceService } from './invoice.service';
 import { InvoiceRepository } from './invoice.repository';
 import { Invoice, Project } from 'starkbank';
 import { HttpException } from '@nestjs/common';
+import { BlobServiceClient, ContainerClient } from '@azure/storage-blob';
+
+jest.mock('@azure/storage-blob');
 
 describe('InvoiceService', () => {
   let service: InvoiceService;
@@ -25,6 +28,12 @@ describe('InvoiceService', () => {
 
     service = module.get<InvoiceService>(InvoiceService);
     repository = module.get(InvoiceRepository);
+
+    (service as any).generateContainerClient = jest.fn().mockReturnValue({
+      getBlockBlobClient: jest.fn().mockReturnValue({
+        uploadData: jest.fn().mockResolvedValue({}),
+      }),
+    });
   });
 
   describe('generateInvoices', () => {

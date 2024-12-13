@@ -7,13 +7,15 @@ import { CustomerHelper as helper } from './helpers/customer.helper';
 import { Project, invoice } from 'starkbank';
 import { ProcessTransferResponse } from './interfaces/processInvoice.response';
 import { GenerateInvoiceResponse } from './interfaces/generateInvoices.response';
-import { BlobServiceClient, BlockBlobClient } from '@azure/storage-blob';
+import {
+  BlobServiceClient,
+  BlockBlobClient,
+  ContainerClient,
+} from '@azure/storage-blob';
 
 @Injectable()
 export class InvoiceService implements IInvoiceService {
   constructor(private readonly invoiceRepository: InvoiceRepository) {}
-
-  private readonly containerClient = this.generateContainerClient();
 
   private readonly logger = new Logger(InvoiceService.name);
 
@@ -82,6 +84,8 @@ export class InvoiceService implements IInvoiceService {
     );
 
     try {
+      const blobContainer = this.generateContainerClient();
+
       const starkKey = await this.invoiceRepository.retrievePublicKey();
 
       const headersKey = this.formatHeaders(headers);
@@ -109,7 +113,11 @@ export class InvoiceService implements IInvoiceService {
         rawEvent.subscription == 'invoice' &&
         rawEvent.log.type == 'credited'
       ) {
-        await this.saveToLogFile(JSON.stringify(body, null, 2), 'response');
+        await this.saveToLogFile(
+          blobContainer,
+          JSON.stringify(body, null, 2),
+          'response',
+        );
 
         const privKey = process.env.PRIV_KEY_VAL;
 
@@ -127,7 +135,11 @@ export class InvoiceService implements IInvoiceService {
           admin,
         );
 
-        await this.saveToLogFile(JSON.stringify(res, null, 2), 'response');
+        await this.saveToLogFile(
+          blobContainer,
+          JSON.stringify(res, null, 2),
+          'response',
+        );
 
         this.logger.log(
           'InvoiceService (processTransfer): PROCESSED TRANSFER EVENT SUCCESSFULLY',
@@ -143,27 +155,31 @@ export class InvoiceService implements IInvoiceService {
     }
   }
 
-  private generateContainerClient() {
-    const blobServiceClient = BlobServiceClient.fromConnectionString(
-      process.env.BLOB_CONN_STRING,
-    );
-
-    return blobServiceClient.getContainerClient('invoice-logs');
-  }
-
-  async saveToLogFile(content: string, name: string) {
+  async saveToLogFile(
+    container: ContainerClient,
+    content: string,
+    name: string,
+  ) {
     const today = new Date();
 
     const fileName = `log-invoice-process-${name}-${today.getTime()}.txt`;
 
     const blockBlobClient: BlockBlobClient =
-      this.containerClient.getBlockBlobClient(fileName);
+      container.getBlockBlobClient(fileName);
 
     const uploadBlobResponse = await blockBlobClient.uploadData(
       Buffer.from(JSON.stringify(content), 'utf-8'),
     );
 
     return uploadBlobResponse.requestId;
+  }
+
+  generateContainerClient() {
+    const blobServiceClient = BlobServiceClient.fromConnectionString(
+      process.env.BLOB_CONN_STRING,
+    );
+
+    return blobServiceClient.getContainerClient('invoice-logs');
   }
 
   private createInvoice(customer: CustomerDto): InvoiceDto {
