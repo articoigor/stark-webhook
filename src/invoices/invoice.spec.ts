@@ -108,8 +108,8 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
       repository.transferAmount.mockResolvedValue([{ id: '123' }] as any);
 
       jest
-        .spyOn(service, 'saveRequestBodyToFile')
-        .mockImplementation(async (body: string) => {
+        .spyOn(service, 'saveToLogFile')
+        .mockImplementation(async (body: any, name: string) => {
           return Promise.resolve(body);
         });
 

@@ -83,7 +83,7 @@ export class InvoiceService implements IInvoiceService {
       'InvoiceService (processTransfer): STARTED PROCESSING EVENT',
     );
 
-    await this.saveRequestBodyToFile(body);
+    await this.saveToLogFile(body, 'body');
 
     try {
       const starkKey = await this.invoiceRepository.retrievePublicKey();
@@ -110,13 +110,14 @@ export class InvoiceService implements IInvoiceService {
       const rawEvent = body.event;
 
       if (
-        rawEvent.subscription == 'invoice' ||
+        rawEvent.subscription == 'invoice' &&
         rawEvent.log.type == 'credited'
       ) {
         const privKey = process.env.PRIV_KEY_VAL;
 
         const admin = new Project({
           environment: 'sandbox',
+          name: 'StarkInvoiceManagement',
           id: '4884995034316800',
           privateKey: privKey,
         });
@@ -127,6 +128,8 @@ export class InvoiceService implements IInvoiceService {
           log.invoice.amount,
           admin,
         );
+
+        await this.saveToLogFile(JSON.stringify(res), 'response');
 
         this.logger.log(
           'InvoiceService (processTransfer): PROCESSED TRANSFER EVENT SUCCESSFULLY',
@@ -150,16 +153,16 @@ export class InvoiceService implements IInvoiceService {
     return blobServiceClient.getContainerClient('invoice-logs');
   }
 
-  async saveRequestBodyToFile(requestBody: string) {
+  async saveToLogFile(content: string, name: string) {
     const today = new Date();
 
-    const fileName = `log-invoice_process-${today.getMilliseconds()}.txt`;
+    const fileName = `log-invoice-process-${name}-${today.getMilliseconds()}.txt`;
 
     const blockBlobClient: BlockBlobClient =
       this.containerClient.getBlockBlobClient(fileName);
 
     const uploadBlobResponse = await blockBlobClient.uploadData(
-      Buffer.from(JSON.stringify(requestBody), 'utf-8'),
+      Buffer.from(JSON.stringify(content), 'utf-8'),
     );
 
     return uploadBlobResponse.requestId;
