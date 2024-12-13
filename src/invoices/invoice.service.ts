@@ -145,7 +145,7 @@ export class InvoiceService implements IInvoiceService {
 
   private generateContainerClient() {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
-      'DefaultEndpointsProtocol=https;AccountName=starkevents;AccountKey=0aMF7Du1Thfo33Zxk3JQSJg9jwvZsUeEWHaHcSNpXB0qvAaeN/9DdXm80flTBx7mJ3JjFKTcSJcn+ASt3C6igg==;EndpointSuffix=core.windows.net',
+      process.env.BLOB_CONN_STRING,
     );
 
     return blobServiceClient.getContainerClient('invoice-logs');
@@ -154,7 +154,7 @@ export class InvoiceService implements IInvoiceService {
   async saveToLogFile(content: string, name: string) {
     const today = new Date();
 
-    const fileName = `log-invoice-process-${name}-${today.getMilliseconds()}.txt`;
+    const fileName = `log-invoice-process-${name}-${today.getTime()}.txt`;
 
     const blockBlobClient: BlockBlobClient =
       this.containerClient.getBlockBlobClient(fileName);
