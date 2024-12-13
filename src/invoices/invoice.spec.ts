@@ -34,6 +34,8 @@ describe('InvoiceService', () => {
       jest.resetModules();
       process.env = {
         ...originalEnv,
+        BLOB_CONN_STRING:
+          'DefaultEndpointsProtocol=https;AccountName=starkevents;AccountKey=0aMF7Du1Thfo33Zxk3JQSJg9jwvZsUeEWHaHcSNpXB0qvAaeN/9DdXm80flTBx7mJ3JjFKTcSJcn+ASt3C6igg==;EndpointSuffix=core.windows.net',
         PRIV_KEY_VAL: `-----BEGIN EC PARAMETERS-----
 BgUrgQQACg==
 -----END EC PARAMETERS-----
@@ -87,6 +89,8 @@ D1sbfRM9KYy+WOBCSZiDfT5CUrQY8Q==
       jest.resetModules();
       process.env = {
         ...originalEnv,
+        BLOB_CONN_STRING:
+          'DefaultEndpointsProtocol=https;AccountName=starkevents;AccountKey=0aMF7Du1Thfo33Zxk3JQSJg9jwvZsUeEWHaHcSNpXB0qvAaeN/9DdXm80flTBx7mJ3JjFKTcSJcn+ASt3C6igg==;EndpointSuffix=core.windows.net',
         PRIV_KEY_VAL: `-----BEGIN EC PARAMETERS-----
 BgUrgQQACg==
 -----END EC PARAMETERS-----

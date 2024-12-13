@@ -81,8 +81,6 @@ export class InvoiceService implements IInvoiceService {
       'InvoiceService (processTransfer): STARTED PROCESSING EVENT',
     );
 
-    await this.saveToLogFile(body, 'body');
-
     try {
       const starkKey = await this.invoiceRepository.retrievePublicKey();
 
@@ -111,6 +109,8 @@ export class InvoiceService implements IInvoiceService {
         rawEvent.subscription == 'invoice' &&
         rawEvent.log.type == 'credited'
       ) {
+        await this.saveToLogFile(JSON.stringify(body, null, 2), 'response');
+
         const privKey = process.env.PRIV_KEY_VAL;
 
         const admin = new Project({
@@ -127,7 +127,7 @@ export class InvoiceService implements IInvoiceService {
           admin,
         );
 
-        await this.saveToLogFile(JSON.stringify(res), 'response');
+        await this.saveToLogFile(JSON.stringify(res, null, 2), 'response');
 
         this.logger.log(
           'InvoiceService (processTransfer): PROCESSED TRANSFER EVENT SUCCESSFULLY',
